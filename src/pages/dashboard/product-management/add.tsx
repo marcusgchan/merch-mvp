@@ -10,6 +10,7 @@ import { Textarea } from "~/components/ui/TextArea";
 import { Button } from "~/components/ui/Button";
 import { FieldValidation } from "~/components/ui/FieldValidation";
 import { useRouter } from "next/router";
+import { Minus } from "lucide-react";
 
 export const getServerSideProps: GetServerSideProps<{}> = async (ctx) => {
   const session = await getServerAuthSession(ctx);
@@ -55,9 +56,7 @@ function Form({ initialData, submitCallback }: FormProps<AddProductInput>) {
     control,
     formState: { errors },
   } = useForm<AddProductInput>({
-    defaultValues: initialData
-      ? { ...initialData, about: [{ id: uuidv4(), description: "" }] }
-      : undefined,
+    defaultValues: initialData ? initialData : undefined,
     resolver: zodResolver(addProductSchema),
   });
 
@@ -95,16 +94,18 @@ function Form({ initialData, submitCallback }: FormProps<AddProductInput>) {
         <div className="grid gap-4">
           {fields.map((field, index) => {
             return (
-              <FieldValidation
-                key={field.id}
-                error={errors.about?.[index]?.description}
-              >
-                <Textarea
-                  key={field.id}
-                  className="max-h-[8rem] min-h-[4rem] resize-none"
-                  {...register(`about.${index}.description`)}
-                />
-              </FieldValidation>
+              <div key={field.id} className="flex gap-2 items-center">
+                <FieldValidation error={errors.about?.[index]?.description}>
+                  <Textarea
+                    key={field.id}
+                    className="max-h-[8rem] min-h-[4rem] resize-none"
+                    {...register(`about.${index}.description`)}
+                  />
+                </FieldValidation>
+                <Button variant="ghost" onClick={() => remove(index)}>
+                  <Minus />
+                </Button>
+              </div>
             );
           })}
           <Button
