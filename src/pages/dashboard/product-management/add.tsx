@@ -1,13 +1,15 @@
 import { GetServerSideProps } from "next";
 import { useFieldArray, useForm } from "react-hook-form";
 import { getServerAuthSession } from "~/server/auth";
-import { type RouterOutputs } from "~/utils/api";
+import { api, type RouterOutputs } from "~/utils/api";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { v4 as uuidv4 } from "uuid";
 import { AddProductInput, addProductSchema } from "~/schemas/productManagement";
 import { Input } from "~/components/ui/Input";
 import { Textarea } from "~/components/ui/TextArea";
 import { Button } from "~/components/ui/Button";
+import { FieldValidation } from "~/components/ui/FieldValidation";
+import { useRouter } from "next/router";
 
 export const getServerSideProps: GetServerSideProps<{}> = async (ctx) => {
   const session = await getServerAuthSession(ctx);
@@ -26,19 +28,27 @@ export const getServerSideProps: GetServerSideProps<{}> = async (ctx) => {
 };
 
 export default function Add() {
+  const addProduct = api.productManagement.add.useMutation();
+  const router = useRouter();
+
+  const submitCallback = (data: AddProductInput) => {
+    addProduct.mutate(data);
+    router.push("./");
+  };
+
   return (
     <main className="flex h-full items-center justify-center">
-      <Form initialData={null} />
+      <Form initialData={null} submitCallback={submitCallback} />
     </main>
   );
 }
 
-type FormProps = {
+type FormProps<TSubmitData> = {
   initialData: RouterOutputs["productManagement"]["get"];
-  submitCallback: () => void;
+  submitCallback: (data: TSubmitData) => void;
 };
 
-function Form({ initialData, submitCallback }: FormProps) {
+function Form({ initialData, submitCallback }: FormProps<AddProductInput>) {
   const {
     register,
     handleSubmit,
@@ -54,49 +64,68 @@ function Form({ initialData, submitCallback }: FormProps) {
   const { fields, append, remove } = useFieldArray({ control, name: "about" });
 
   const addField = () => {
-    append({ id: uuidv4(), description: "klsda;f" });
+    append({ id: uuidv4(), description: "" });
   };
+
+  const router = useRouter();
 
   return (
     <form
-      className="flex w-full max-w-md flex-col gap-3"
-      onSubmit={() => handleSubmit(submitCallback)}
+      className="flex w-full max-w-md flex-col gap-4"
+      onSubmit={(e) => {
+        e.preventDefault();
+        handleSubmit(submitCallback)();
+      }}
     >
       <h1 className="self-start">Add Product</h1>
-      <div>
+      <div className="grid gap-2">
         <label htmlFor="name">Name</label>
-        <Input type="text" id="name" {...register("name")} />
+        <FieldValidation error={errors.name}>
+          <Input type="text" id="name" {...register("name")} />
+        </FieldValidation>
       </div>
-      <div>
-        <label htmlFor="name">Price</label>
-        <Input type="text" id="price" {...register("price")} />
+      <div className="grid gap-2">
+        <label htmlFor="price">Price</label>
+        <FieldValidation error={errors.price}>
+          <Input id="price" type="text" {...register("price")} />
+        </FieldValidation>
       </div>
-      <div className="flex flex-col gap-3">
+      <div className="grid gap-2">
         <h2>About</h2>
-        {fields.map((field, index) => {
-          return (
-            <Textarea
-              key={field.id}
-              {...register(`about.${index}.description`)}
-            />
-          );
-        })}
-        <Button
-          type="button"
-          variant="outline"
-          onClick={addField}
-          className="w-full"
-        >
-          Add Bullet Point
-        </Button>
-        <div className="flex">
-          <Button type="button" variant="ghost">
-            Back
-          </Button>
-          <Button type="submit">
-            Add Product
+        <div className="grid gap-4">
+          {fields.map((field, index) => {
+            return (
+              <FieldValidation
+                key={field.id}
+                error={errors.about?.[index]?.description}
+              >
+                <Textarea
+                  key={field.id}
+                  className="max-h-[8rem] min-h-[4rem] resize-none"
+                  {...register(`about.${index}.description`)}
+                />
+              </FieldValidation>
+            );
+          })}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={addField}
+            className="w-full"
+          >
+            Add Bullet Point
           </Button>
         </div>
+      </div>
+      <div className="flex justify-end gap-5">
+        <Button
+          type="button"
+          variant="destructive"
+          onClick={() => router.push("./")}
+        >
+          Back
+        </Button>
+        <Button type="submit">Add Product</Button>
       </div>
     </form>
   );

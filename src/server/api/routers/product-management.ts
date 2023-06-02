@@ -23,6 +23,11 @@ export const productManagement = createTRPCRouter({
 
       return product;
     }),
+  getAll: protectedProcedure
+    .query(async ({ ctx }) => {
+      const products = await ctx.prisma.product.findMany();
+      return products;
+    }),
   get: protectedProcedure
     .input(z.string())
     .query(async ({ ctx, input }) => {

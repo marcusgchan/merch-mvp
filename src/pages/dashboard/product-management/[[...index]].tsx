@@ -1,28 +1,49 @@
 import Link from "next/link";
+import DashboardHeader from "~/components/dashboard/DashboardHeader";
+import DashboardLayout from "~/components/dashboard/DashboardLayout";
+import { api } from "~/utils/api";
 
 export default function Orders() {
+  const { data: products, isLoading } = api.productManagement.getAll.useQuery();
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!products) {
+    return <div>Something went wrong</div>;
+  }
+
   return (
-    <div className="flex flex-col gap-3">
-      <nav className="flex justify-between">
-        <h1>Dashboard</h1>
-        <ul className="flex gap-2">
-          <li>
-            <Link href="/dashboard">Orders</Link>
-          </li>
-          <li>
-            <Link href=".">Product Management</Link>
-          </li>
-        </ul>
-      </nav>
+    <DashboardLayout>
+      <DashboardHeader />
       <main>
         <div className="flex justify-between">
           <h2>Product Management</h2>
           <div>
-            <Link href="add" className="bg-violet-400 py-2 px-3 rounded">Add Product</Link>
+            <Link href="add" className="rounded bg-violet-400 px-3 py-2">
+              Add Product
+            </Link>
           </div>
         </div>
-        <section></section>
+        <section className="grid grid-cols-4 gap-3">
+          {products.map((product) => (
+            <Link
+              href={`./${product.id}`}
+              key={product.id}
+              className="grid h-80 w-full items-center justify-stretch gap-2 rounded border-2 border-accent p-4"
+            >
+              <img
+                className="h-full w-full object-cover"
+                src="https://picsum.photos/200"
+                alt="Product Image"
+              />
+              <h3>{product.name}</h3>
+              <span>$ {product.price}</span>
+            </Link>
+          ))}
+        </section>
       </main>
-    </div>
+    </DashboardLayout>
   );
 }
