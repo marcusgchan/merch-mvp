@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function Orders() {
   return (
-    <div>
+    <div className="flex flex-col gap-3">
       <nav className="flex justify-between">
         <h1>Dashboard</h1>
         <ul className="flex gap-2">
@@ -10,12 +10,17 @@ export default function Orders() {
             <Link href="/dashboard">Orders</Link>
           </li>
           <li>
-            <Link href="product-management">Product Management</Link>
+            <Link href=".">Product Management</Link>
           </li>
         </ul>
       </nav>
       <main>
-        <h2>Orders</h2>
+        <div className="flex justify-between">
+          <h2>Product Management</h2>
+          <div>
+            <Link href="add" className="bg-violet-400 py-2 px-3 rounded">Add Product</Link>
+          </div>
+        </div>
         <section></section>
       </main>
     </div>

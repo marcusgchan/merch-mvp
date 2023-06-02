@@ -5,9 +5,10 @@ import {
   type NextAuthOptions,
   type DefaultSession,
 } from "next-auth";
-import DiscordProvider from "next-auth/providers/discord";
+import CredentialsProvider from "next-auth/providers/credentials";
 import { env } from "~/env.mjs";
 import { prisma } from "~/server/db";
+import bycrpt from "bcrypt";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -36,20 +37,63 @@ declare module "next-auth" {
  * @see https://next-auth.js.org/configuration/options
  */
 export const authOptions: NextAuthOptions = {
+  session: { strategy: "jwt" },
   callbacks: {
-    session: ({ session, user }) => ({
-      ...session,
-      user: {
-        ...session.user,
-        id: user.id,
-      },
-    }),
+    session: ({ session, user, token }) => {
+      if (user) {
+        return {
+          ...session,
+          user: {
+            ...session.user,
+            id: user.id,
+          },
+        };
+      }
+      return {
+        ...session,
+        user: {
+          id: token.sub as string,
+        },
+      }
+    },
   },
   adapter: PrismaAdapter(prisma),
   providers: [
-    DiscordProvider({
-      clientId: env.DISCORD_CLIENT_ID,
-      clientSecret: env.DISCORD_CLIENT_SECRET,
+    CredentialsProvider({
+      name: "Credentials",
+      credentials: {
+        username: {
+          label: "Username",
+        },
+        password: {
+          label: "Password",
+          type: "password",
+        },
+      },
+      async authorize(credentials) {
+        if (!credentials) return null;
+
+        const user = await prisma.user.findUnique({
+          where: {
+            username: credentials.username,
+          },
+        });
+
+        if (!user) return null;
+
+        const hashedPassword = user.password;
+
+        if (!hashedPassword) return null;
+
+        const authenticated = await bycrpt.compare(
+          credentials.password,
+          hashedPassword
+        );
+
+        if (!authenticated) return null;
+
+        return user;
+      },
     }),
     /**
      * ...add more providers here.
