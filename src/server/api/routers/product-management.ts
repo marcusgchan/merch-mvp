@@ -7,23 +7,34 @@ import {
 import { Prisma } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 
-export const productManagement = createTRPCRouter({
+export const productManagementRouter = createTRPCRouter({
   add: protectedProcedure
     .input(addProductSchema)
     .mutation(async ({ ctx, input }) => {
-      const product = await ctx.prisma.product.create({
-        data: {
-          name: input.name,
-          price: input.price,
-          aboutProducts: {
-            createMany: {
-              data: input.about,
+      const data = await ctx.prisma.$transaction(async (prisma) => {
+        const product = await prisma.product.create({
+          data: {
+            name: input.name,
+            price: input.price,
+            aboutProducts: {
+              createMany: {
+                data: input.about,
+              },
             },
           },
-        },
+        });
+
+        await prisma.availableSize.createMany({
+          data: input.sizes.map(({ id }) => {
+            return {
+              productId: product.id,
+              productSizeId: id,
+            };
+          }),
+        });
       });
 
-      return product;
+      return data;
     }),
   edit: protectedProcedure
     .input(editProductSchema)
@@ -69,6 +80,21 @@ export const productManagement = createTRPCRouter({
 
           await Promise.all(upsertPromises);
 
+          await prisma.availableSize.deleteMany({
+            where: {
+              productId: input.id,
+            },
+          });
+
+          await prisma.availableSize.createMany({
+            data: input.sizes.map(({ id }) => {
+              return {
+                productId: input.id,
+                productSizeId: id,
+              };
+            }),
+          });
+
           return updatedProduct;
         },
         { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead }
@@ -76,6 +102,11 @@ export const productManagement = createTRPCRouter({
 
       return updatedProduct;
     }),
+  getAllSizes: protectedProcedure.query(async ({ ctx }) => {
+    const sizes = await ctx.prisma.productSize.findMany();
+
+    return sizes;
+  }),
   getAll: protectedProcedure.query(async ({ ctx }) => {
     const products = await ctx.prisma.product.findMany();
     return products;
@@ -87,10 +118,54 @@ export const productManagement = createTRPCRouter({
       },
       include: {
         aboutProducts: true,
-        availableSizes: true,
+        availableSizes: {
+          include: {
+            productSize: true,
+          },
+        },
       },
     });
 
-    return product;
+    if (product) {
+      return {
+        ...product,
+        availableSizes: product.availableSizes.map(({ productSize }) => {
+          return {
+            id: productSize.id,
+            size: productSize.size,
+          };
+        }),
+      };
+    }
+
+    return null;
   }),
+  archive: protectedProcedure
+    .input(z.string())
+    .mutation(async ({ ctx, input }) => {
+      const product = await ctx.prisma.product.update({
+        where: {
+          id: input,
+        },
+        data: {
+          archived: true,
+        },
+      });
+
+      return product;
+    }),
+  unarchive: protectedProcedure
+    .input(z.string())
+    .mutation(async ({ ctx, input }) => {
+      const product = await ctx.prisma.product.update({
+        where: {
+          id: input,
+        },
+        data: {
+          archived: false,
+        },
+      });
+
+      return product;
+    }),
 });

@@ -5,6 +5,8 @@ import { Form } from "~/components/dashboard/ProductForm";
 import { editProductSchema } from "~/schemas/productManagement";
 import { RouterInputs, api } from "~/utils/api";
 
+export { getServerSideProps } from "~/utils/serverSideAuth";
+
 export default function Product() {
   const router = useRouter();
 
@@ -15,9 +17,12 @@ export default function Product() {
     { enabled: !!productId, refetchOnWindowFocus: false }
   );
 
+  const queryUtils = api.useContext();
+
   const editProduct = api.productManagement.edit.useMutation({
-    onSuccess() {
+    onSuccess(data) {
       router.push("./");
+      queryUtils.productManagement.get.invalidate(data.id);
     },
   });
 
@@ -28,6 +33,8 @@ export default function Product() {
   if (!product) {
     return <div>Something went wrong</div>;
   }
+
+  console.log(product);
 
   const submitCallback = (
     data:

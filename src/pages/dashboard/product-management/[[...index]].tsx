@@ -3,6 +3,8 @@ import DashboardHeader from "~/components/dashboard/DashboardHeader";
 import DashboardLayout from "~/components/dashboard/DashboardLayout";
 import { api } from "~/utils/api";
 
+export { getServerSideProps } from "~/utils/serverSideAuth";
+
 export default function Orders() {
   const { data: products, isLoading } = api.productManagement.getAll.useQuery();
 
@@ -20,7 +22,7 @@ export default function Orders() {
       <main>
         <div className="flex justify-between">
           <h2>Product Management</h2>
-          <div>
+          <div className="flex">
             <Link href="add" className="rounded bg-violet-400 px-3 py-2">
               Add Product
             </Link>
@@ -40,6 +42,7 @@ export default function Orders() {
               />
               <h3>{product.name}</h3>
               <span>$ {product.price}</span>
+              <span>{product.archived ? "Archived" : "Active"}</span>
             </Link>
           ))}
         </section>

@@ -1,23 +1,14 @@
-import Link from "next/link";
+import DashboardHeader from "~/components/dashboard/DashboardHeader";
+import DashboardLayout from "~/components/dashboard/DashboardLayout";
 
 export default function Orders() {
   return (
-    <div>
-      <nav className="flex justify-between">
-        <h1>Dashboard</h1>
-        <ul className="flex gap-2">
-          <li>
-            <Link href="/dashboard">Orders</Link>
-          </li>
-          <li>
-            <Link href="product-management">Product Management</Link>
-          </li>
-        </ul>
-      </nav>
+    <DashboardLayout>
+      <DashboardHeader />
       <main>
         <h2>Orders</h2>
         <section></section>
       </main>
-    </div>
+    </DashboardLayout>
   );
 }

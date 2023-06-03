@@ -6,22 +6,23 @@ import { Textarea } from "../ui/TextArea";
 import { useRouter } from "next/router";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  AddProductInput,
-  EditProductInput,
+  AddProduct,
+  EditProduct,
   addProductSchema,
   editProductSchema,
 } from "~/schemas/productManagement";
 import { useFieldArray, useForm } from "react-hook-form";
-import { RouterInputs, RouterOutputs } from "~/utils/api";
+import { RouterInputs, RouterOutputs, api } from "~/utils/api";
 import { v4 as uuidv4 } from "uuid";
+import { Checkbox } from "../ui/Checkbox";
+import { CheckedState } from "@radix-ui/react-checkbox";
 
 export type FormProps = {
   initialData: RouterOutputs["productManagement"]["get"];
   schema: typeof addProductSchema | typeof editProductSchema;
   submitCallback: (
-    data:
-      | RouterInputs["productManagement"]["edit"]
-      | RouterInputs["productManagement"]["add"]
+    data: AddProduct | EditProduct,
+    sizes: RouterInputs["productManagement"]["add"]["sizes"]
   ) => void;
 };
 
@@ -31,35 +32,120 @@ export function Form({ initialData, schema, submitCallback }: FormProps) {
     handleSubmit,
     control,
     formState: { errors },
-  } = useForm<AddProductInput | EditProductInput>({
+  } = useForm<AddProduct | EditProduct>({
     defaultValues: initialData
-      ? { ...initialData, about: initialData.aboutProducts }
-      : undefined,
-    values: initialData
-      ? { ...initialData, about: initialData.aboutProducts }
+      ? {
+          ...initialData,
+          about: initialData.aboutProducts,
+          sizes: initialData.availableSizes,
+        }
       : undefined,
     resolver: zodResolver(schema),
   });
 
-  const { fields, append, remove } = useFieldArray({ control, name: "about" });
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "about",
+    keyName: "key",
+  });
 
   const addField = () => {
     append({ id: uuidv4(), description: "" });
   };
 
+  const archiveProduct = api.productManagement.archive.useMutation({
+    onSuccess() {
+      router.push("./");
+    },
+  });
+
+  const handleArchiveProduct = () => {
+    if (!initialData) return;
+    archiveProduct.mutate(initialData.id);
+  };
+
+  const unarchiveProduct = api.productManagement.unarchive.useMutation({
+    onSuccess() {
+      router.push("./");
+    },
+  });
+
+  const handleUnarchiveProduct = () => {
+    if (!initialData) return;
+    unarchiveProduct.mutate(initialData.id);
+  };
+
   const router = useRouter();
+
+  const { data: allSizes, isLoading: allSizesIsLoading } =
+    api.productManagement.getAllSizes.useQuery(undefined, {
+      refetchOnWindowFocus: false,
+    });
+
+  const {
+    fields: sizes,
+    append: appendSizes,
+    remove: removeSizes,
+  } = useFieldArray({
+    control,
+    name: "sizes",
+    keyName: "key",
+  });
+
+  const handleChecked = (
+    checkedState: CheckedState,
+    id: string,
+    size: string,
+    index: number
+  ) => {
+    if (checkedState === "indeterminate" || index === -1) return;
+
+    if (checkedState) {
+      appendSizes({ id, size: size });
+    } else {
+      removeSizes(index);
+    }
+  };
+
+  if (allSizesIsLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!allSizes) {
+    return <div>Something went wrong</div>;
+  }
 
   return (
     <form
       className="flex w-full max-w-md flex-col gap-4"
       onSubmit={(e) => {
         e.preventDefault();
-        handleSubmit(submitCallback)();
+        handleSubmit((data) => submitCallback(data, sizes))();
       }}
     >
-      <h1 className="self-start">
-        {initialData ? "Edit Product" : "Add Product"}
-      </h1>
+      <div className="flex items-center justify-between">
+        <h2 className="self-start">
+          {initialData ? "Edit Product" : "Add Product"}
+        </h2>
+        {initialData && !initialData.archived && (
+          <Button
+            onClick={handleArchiveProduct}
+            type="button"
+            variant="destructive"
+          >
+            Archive
+          </Button>
+        )}
+        {initialData && initialData.archived && (
+          <Button
+            onClick={handleUnarchiveProduct}
+            type="button"
+            variant="destructive"
+          >
+            Unarchive
+          </Button>
+        )}
+      </div>
       <div className="grid gap-2">
         <label htmlFor="name">Name</label>
         <FieldValidation error={errors.name}>
@@ -71,6 +157,27 @@ export function Form({ initialData, schema, submitCallback }: FormProps) {
         <FieldValidation error={errors.price}>
           <Input id="price" type="text" {...register("price")} />
         </FieldValidation>
+      </div>
+      <h3>Sizes</h3>
+      <div className="grid grid-cols-3 gap-2">
+        {allSizes.map(({ id, size }) => {
+          return (
+            <div key={id} className="flex items-center gap-1">
+              <label htmlFor={id}>{size}</label>
+              <Checkbox
+                checked={sizes.some((size) => size.id === id)}
+                onCheckedChange={(e) =>
+                  handleChecked(
+                    e,
+                    id,
+                    size,
+                    allSizes.findIndex((size) => size.id === id)
+                  )
+                }
+              />
+            </div>
+          );
+        })}
       </div>
       <div className="grid gap-2">
         <h2>About</h2>

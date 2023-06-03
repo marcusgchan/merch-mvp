@@ -72,12 +72,13 @@ model VerificationToken {
 }
 
 enum Size {
-  XS
-  S
-  M
-  L
-  XL
-  XXL
+  xxs
+  xs
+  s
+  m
+  l
+  xl
+  xxl
 }
 
 model ProductSize {
@@ -133,6 +134,7 @@ model OrderItem {
   productId String
   product   Product @relation(fields: [productId], references: [id])
   size      Size?
+  quantity  Int
 
   @@index([orderId])
   @@index([productId])

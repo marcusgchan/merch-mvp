@@ -1,27 +1,13 @@
-import { GetServerSideProps } from "next";
-import { getServerAuthSession } from "~/server/auth";
 import { RouterInputs, api } from "~/utils/api";
 import {
+  AddProduct,
+  EditProduct,
   addProductSchema,
 } from "~/schemas/productManagement";
 import { useRouter } from "next/router";
 import { Form } from "~/components/dashboard/ProductForm";
 
-export const getServerSideProps: GetServerSideProps<{}> = async (ctx) => {
-  const session = await getServerAuthSession(ctx);
-  if (!session) {
-    return {
-      redirect: {
-        destination:
-          "/api/auth/signin?callbackUrl=/dashboard/product-management/add",
-        permanent: false,
-      },
-    };
-  }
-  return {
-    props: {},
-  };
-};
+export { getServerSideProps } from "~/utils/serverSideAuth";
 
 export default function Add() {
   const addProduct = api.productManagement.add.useMutation({
@@ -33,11 +19,10 @@ export default function Add() {
   const router = useRouter();
 
   const submitCallback = (
-    data:
-      | RouterInputs["productManagement"]["add"]
-      | RouterInputs["productManagement"]["edit"]
+    data: AddProduct | EditProduct,
+    sizes: RouterInputs["productManagement"]["add"]["sizes"]
   ) => {
-    addProduct.mutate(data);
+    addProduct.mutate({ ...data, sizes });
   };
 
   return (
