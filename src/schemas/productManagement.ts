@@ -19,3 +19,10 @@ export const addProductSchema = z.object({
 });
 
 export type AddProductInput = z.infer<typeof addProductSchema>;
+
+export const editProductSchema = addProductSchema.extend({
+  id: z.string(),
+  updatedAt: z.date(),
+});
+
+export type EditProductInput = z.infer<typeof editProductSchema>;
