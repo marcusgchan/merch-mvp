@@ -7,7 +7,7 @@ export const addOrderSchema = z.object({
     .object({
       id: z.string(),
       quantity: z.number().min(1),
-      size: z.enum(["XXS", "XS", "S", "M", "L", "XL"]).optional(),
+      size: z.enum(["xxs", "xs", "s", "m", "l", "xl", "xxl"]).optional(),
     })
     .array()
     .min(1),

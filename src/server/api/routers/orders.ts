@@ -8,7 +8,10 @@ export const orderRouter = createTRPCRouter({
       include: { _count: { select: { orderedItems: true } } },
     });
 
-    return orders;
+    return [...orders].map((order) => ({
+      ...order,
+      count: order._count.orderedItems as number,
+    }));
   }),
   get: protectedProcedure.input(z.string()).query(async ({ ctx, input }) => {
     const order = await ctx.prisma.order.findUnique({
