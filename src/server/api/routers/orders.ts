@@ -8,7 +8,7 @@ export const orderRouter = createTRPCRouter({
       include: { _count: { select: { orderedItems: true } } },
     });
 
-    return [...orders].map((order) => ({
+    return orders.map((order) => ({
       ...order,
       count: order._count.orderedItems as number,
     }));
