@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 import DashboardHeader from "~/components/dashboard/DashboardHeader";
-import DashboardLayout from "~/components/dashboard/DashboardLayout";
+import Layout from "~/components/ui/Layout";
 import { Form } from "~/components/dashboard/ProductForm";
 import { editProductSchema } from "~/schemas/productManagement";
 import { RouterInputs, api } from "~/utils/api";
@@ -34,8 +34,6 @@ export default function Product() {
     return <div>Something went wrong</div>;
   }
 
-  console.log(product);
-
   const submitCallback = (
     data:
       | RouterInputs["productManagement"]["add"]
@@ -49,7 +47,7 @@ export default function Product() {
   };
 
   return (
-    <DashboardLayout>
+    <Layout>
       <DashboardHeader />
       <main className="flex justify-center">
         <Form
@@ -58,6 +56,6 @@ export default function Product() {
           submitCallback={submitCallback}
         />
       </main>
-    </DashboardLayout>
+    </Layout>
   );
 }

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import DashboardHeader from "~/components/dashboard/DashboardHeader";
-import DashboardLayout from "~/components/dashboard/DashboardLayout";
+import Layout from "~/components/ui/Layout";
 import { api } from "~/utils/api";
 
 export { getServerSideProps } from "~/utils/serverSideAuth";
@@ -17,7 +17,7 @@ export default function Orders() {
   }
 
   return (
-    <DashboardLayout>
+    <Layout>
       <DashboardHeader />
       <main>
         <div className="flex justify-between">
@@ -47,6 +47,6 @@ export default function Orders() {
           ))}
         </section>
       </main>
-    </DashboardLayout>
+    </Layout>
   );
 }
