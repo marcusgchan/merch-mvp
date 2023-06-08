@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Header from "~/components/products/Header";
 import Layout from "~/components/ui/Layout";
 import { RouterOutputs, api } from "~/utils/api";
 
@@ -17,6 +18,7 @@ export default function Products() {
 
   return (
     <Layout>
+      <Header />
       <main>
         <h1>Products</h1>
         <section className="grid grid-cols-4 gap-3">
