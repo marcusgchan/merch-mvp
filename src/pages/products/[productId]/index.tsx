@@ -45,14 +45,12 @@ export default function Product() {
   const handleAddToCart = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // TODO: display alert
-    if (!size) {
-      return;
+    if (size) {
+      const id = `${product.id}-${size}`;
+      addToCart({ id, name: product.name, size, quantity });
+    } else {
+      addToCart({ id: product.id, name: product.name, quantity });
     }
-
-    const id = `${product.id}-${size}`;
-
-    addToCart({ id, name: product.name, size, quantity });
   };
 
   return (
