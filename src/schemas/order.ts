@@ -12,3 +12,10 @@ export const addOrderSchema = z.object({
     .array()
     .min(1),
 });
+
+export const addFormOrderSchema = addOrderSchema.pick({
+  name: true,
+  email: true,
+});
+
+export type AddFormOrder = z.infer<typeof addFormOrderSchema>;

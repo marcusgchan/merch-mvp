@@ -13,7 +13,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/Select";
-import { api } from "~/utils/api";
+import { RouterInputs, api } from "~/utils/api";
+
+type Size = RouterInputs["order"]["add"]["products"][number]["size"];
 
 export default function Product() {
   const router = useRouter();
@@ -26,8 +28,9 @@ export default function Product() {
     }
   );
 
-  const [size, setSize] = useState<string>();
-  const handleSize = (value: string) => setSize(value);
+  const [size, setSize] =
+    useState<Size>();
+  const handleSize = (value: string) => setSize(value as Size);
 
   const [quantity, setQuantity] = useState<number>(1);
   const handleQuantity = (value: number) => setQuantity(value);

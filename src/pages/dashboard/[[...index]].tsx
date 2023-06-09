@@ -1,6 +1,6 @@
 import { ColumnDef } from "@tanstack/react-table";
 import DashboardHeader from "~/components/dashboard/DashboardHeader";
-import DashboardLayout from "~/components/dashboard/DashboardLayout";
+import Layout from "~/components/ui/Layout";
 import { RouterOutputs, api } from "~/utils/api";
 import {
   flexRender,
@@ -33,7 +33,7 @@ export default function Orders() {
   }
 
   return (
-    <DashboardLayout>
+    <Layout>
       <DashboardHeader />
       <main>
         <h2>Orders</h2>
@@ -43,7 +43,7 @@ export default function Orders() {
           </div>
         </section>
       </main>
-    </DashboardLayout>
+    </Layout>
   );
 }
 
