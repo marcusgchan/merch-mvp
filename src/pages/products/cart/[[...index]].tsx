@@ -16,6 +16,8 @@ import {
   DialogTrigger,
 } from "~/components/ui/Dialog";
 import dynamic from "next/dynamic";
+import { api } from "~/utils/api";
+import { useRouter } from "next/router";
 
 // Prevent Nextjs hydration warning
 const ClientSideDialog = dynamic(
@@ -37,6 +39,22 @@ export default function Index() {
 
   const placeOrder = () => {};
 
+  const router = useRouter();
+
+  const { data: products, isLoading } = api.product.getAll.useQuery(undefined, {
+    refetchOnWindowFocus: false,
+  });
+
+  if (isLoading) {
+    return <p>Loading...</p>;
+  }
+
+  if (!products) {
+    return <p>Failed to load products</p>;
+  }
+
+  const productPriceMap = new Map(products.map((p) => [p.id, p.price]));
+
   return (
     <Layout>
       <Header />
@@ -46,9 +64,11 @@ export default function Index() {
           {cart.length ? (
             <ul>
               {cart.map((item) => {
+                const productId = item.size ? item.id.split("-")[0] : item.id;
                 return (
                   <CartItem
                     key={item.id}
+                    price={productPriceMap.get(productId as string)}
                     {...item}
                     handleRemove={handleRemove}
                     handleQuantityChange={handleQuantityChange}
@@ -90,6 +110,7 @@ export default function Index() {
 }
 
 type CartItemProps = CartItem & {
+  price: number | undefined;
   handleQuantityChange: (id: string, quantity: number) => void;
   handleRemove: (id: string) => void;
 };
@@ -98,6 +119,7 @@ function CartItem({
   id,
   name,
   size,
+  price,
   quantity,
   handleQuantityChange,
   handleRemove,
@@ -119,6 +141,11 @@ function CartItem({
           />
         </li>
       </ul>
+      {price ? (
+        <span>$ {price * quantity}</span>
+      ) : (
+        <span>This product is no longer sold</span>
+      )}
       <button className="h-min" onClick={() => handleRemove(id)}>
         <Trash2 />
       </button>
