@@ -17,6 +17,10 @@ import {
 } from "~/components/ui/Dialog";
 import dynamic from "next/dynamic";
 import { api } from "~/utils/api";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { type AddFormOrder, addFormOrderSchema } from "~/schemas/order";
+import { FieldValidation } from "~/components/ui/FieldValidation";
 
 // Prevent Nextjs hydration warning
 const ClientSideDialog = dynamic(
@@ -36,11 +40,23 @@ export default function Index() {
   const removeFromCart = useSetAtom(removeFromCartAtom);
   const handleRemove = (id: string) => removeFromCart({ id });
 
-  const placeOrder = () => {};
-
   const { data: products, isLoading } = api.product.getAll.useQuery(undefined, {
     refetchOnWindowFocus: false,
   });
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<AddFormOrder>({
+    resolver: zodResolver(addFormOrderSchema),
+    defaultValues: { name: "", email: "" },
+  });
+
+  const placeOrderMutation = api.order.add.useMutation();
+  const placeOrder = handleSubmit((data) =>
+    placeOrderMutation.mutate({ ...data, products: cart })
+  );
 
   if (isLoading) {
     return <p>Loading...</p>;
@@ -89,11 +105,15 @@ export default function Index() {
                 <form className="grid gap-4" onSubmit={placeOrder}>
                   <div className="grid gap-2">
                     <label htmlFor="name">Name</label>
-                    <Input id="name" />
+                    <FieldValidation error={errors.name}>
+                      <Input id="name" {...register("name")} />
+                    </FieldValidation>
                   </div>
                   <div className="grid gap-2">
                     <label htmlFor="email">Email</label>
-                    <Input id="email" />
+                    <FieldValidation error={errors.email}>
+                      <Input id="email" {...register("email")} />
+                    </FieldValidation>
                   </div>
                   <Button type="submit">Place Order</Button>
                 </form>

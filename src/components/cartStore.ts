@@ -1,11 +1,7 @@
 import { atom } from "jotai";
+import { RouterInputs } from "~/utils/api";
 
-export type CartItem = {
-  id: string;
-  name: string;
-  quantity: number;
-  size?: string;
-};
+export type CartItem = RouterInputs["order"]["add"]["products"][number] & { name: string }
 
 export const cartAtom = atom<CartItem[]>([]);
 

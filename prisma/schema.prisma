@@ -134,6 +134,7 @@ model OrderItem {
   productId String
   product   Product @relation(fields: [productId], references: [id])
   size      Size?
+  price     Float
   quantity  Int
 
   @@index([orderId])
