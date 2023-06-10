@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/Select";
+import { useToast } from "~/components/ui/useToast";
 import { api } from "~/utils/api";
 
 export default function Product() {
@@ -34,6 +35,8 @@ export default function Product() {
 
   const addToCart = useSetAtom(addToCartAtom);
 
+  const { toast } = useToast();
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -51,6 +54,11 @@ export default function Product() {
     } else {
       addToCart({ id: product.id, name: product.name, quantity });
     }
+
+    toast({
+      title: "Added to cart",
+      description: `${product.name} was added to your cart`,
+    });
   };
 
   return (

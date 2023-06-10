@@ -17,7 +17,6 @@ import {
 } from "~/components/ui/Dialog";
 import dynamic from "next/dynamic";
 import { api } from "~/utils/api";
-import { useRouter } from "next/router";
 
 // Prevent Nextjs hydration warning
 const ClientSideDialog = dynamic(
@@ -38,8 +37,6 @@ export default function Index() {
   const handleRemove = (id: string) => removeFromCart({ id });
 
   const placeOrder = () => {};
-
-  const router = useRouter();
 
   const { data: products, isLoading } = api.product.getAll.useQuery(undefined, {
     refetchOnWindowFocus: false,

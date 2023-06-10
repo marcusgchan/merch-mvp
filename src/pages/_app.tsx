@@ -4,6 +4,7 @@ import { type AppType } from "next/app";
 import { api } from "~/utils/api";
 import { Provider } from "jotai";
 import "~/styles/globals.css";
+import { Toaster } from "~/components/ui/Toaster";
 
 const MyApp: AppType<{ session: Session | null }> = ({
   Component,
@@ -14,6 +15,7 @@ const MyApp: AppType<{ session: Session | null }> = ({
       <SessionProvider session={session}>
         <Component {...pageProps} />
       </SessionProvider>
+      <Toaster />
     </Provider>
   );
 };
