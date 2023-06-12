@@ -1,19 +1,35 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
-import { addOrderSchema } from "~/schemas/order";
+import { addOrderSchema, getAllOrdersSchema } from "~/schemas/order";
 import { TRPCError } from "@trpc/server";
 
 export const orderRouter = createTRPCRouter({
-  getAll: protectedProcedure.query(async ({ ctx }) => {
-    const orders = await ctx.prisma.order.findMany({
-      include: { _count: { select: { orderedItems: true } } },
-    });
+  getAll: protectedProcedure
+    .input(getAllOrdersSchema)
+    .query(async ({ ctx, input }) => {
+      const orders = await ctx.prisma.order.findMany({
+        include: { _count: { select: { orderedItems: true } } },
+        orderBy: {
+          createdAt: "desc",
+        },
+        where: {
+          processingState: input.processingState,
+        },
+      });
 
-    return orders.map((order) => ({
-      ...order,
-      count: order._count.orderedItems as number,
-    }));
-  }),
+      const orderCount = await ctx.prisma.orderItem.groupBy({
+        by: ["orderId"],
+        _sum: {
+          quantity: true,
+        },
+      });
+
+      return orders.map((order) => ({
+        ...order,
+        count:
+          orderCount.find((c) => c.orderId === order.id)?._sum?.quantity ?? 0,
+      }));
+    }),
   get: protectedProcedure.input(z.string()).query(async ({ ctx, input }) => {
     const order = await ctx.prisma.order.findUnique({
       where: {
@@ -70,7 +86,7 @@ export const orderRouter = createTRPCRouter({
                     productId,
                     quantity: product.quantity,
                     size: product.size,
-                    price
+                    price,
                   };
                 }),
               },

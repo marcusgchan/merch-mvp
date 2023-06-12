@@ -21,6 +21,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type AddFormOrder, addFormOrderSchema } from "~/schemas/order";
 import { FieldValidation } from "~/components/ui/FieldValidation";
+import { useToast } from "~/components/ui/useToast";
 
 // Prevent Nextjs hydration warning
 const ClientSideDialog = dynamic(
@@ -53,7 +54,22 @@ export default function Index() {
     defaultValues: { name: "", email: "" },
   });
 
-  const placeOrderMutation = api.order.add.useMutation();
+  const { toast } = useToast();
+  const placeOrderMutation = api.order.add.useMutation({
+    onSuccess() {
+      toast({ title: "Order placed" });
+    },
+    onError(error) {
+      if (error.data?.code && error.data.code === "CONFLICT") {
+        toast({
+          title: "Failed to place order",
+          description: "This product no longer exist",
+        });
+      } else {
+        toast({ title: "Failed to place order" });
+      }
+    },
+  });
   const placeOrder = handleSubmit((data) =>
     placeOrderMutation.mutate({ ...data, products: cart })
   );

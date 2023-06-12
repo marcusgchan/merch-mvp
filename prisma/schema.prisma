@@ -102,13 +102,13 @@ model AvailableSize {
 }
 
 model Product {
-  id          String   @id @default(cuid())
-  imageKey    String?
-  name        String
-  price       Float
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  archived    Boolean  @default(false)
+  id        String   @id @default(cuid())
+  imageKey  String?
+  name      String
+  price     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  archived  Boolean  @default(false)
 
   aboutProducts  AboutProduct[]
   orderedItems   OrderItem[]
@@ -142,12 +142,18 @@ model OrderItem {
   @@map("order_items")
 }
 
+enum ProcessingState {
+  processing
+  processed
+}
+
 model Order {
-  id        String   @id @default(cuid())
-  name      String
-  email     String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String          @id @default(cuid())
+  name            String
+  email           String
+  processingState ProcessingState @default(processing)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
 
   orderedItems OrderItem[]
 

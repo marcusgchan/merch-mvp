@@ -3,7 +3,8 @@ import DashboardHeader from "~/components/dashboard/DashboardHeader";
 import Layout from "~/components/ui/Layout";
 import { Form } from "~/components/dashboard/ProductForm";
 import { editProductSchema } from "~/schemas/productManagement";
-import { RouterInputs, api } from "~/utils/api";
+import { type RouterInputs, api } from "~/utils/api";
+import { useToast } from "~/components/ui/useToast";
 
 export { getServerSideProps } from "~/utils/serverSideAuth";
 
@@ -19,10 +20,22 @@ export default function Product() {
 
   const queryUtils = api.useContext();
 
+  const { toast } = useToast();
   const editProduct = api.productManagement.edit.useMutation({
-    onSuccess(data) {
-      router.push("./");
-      queryUtils.productManagement.get.invalidate(data.id);
+    async onSuccess(data) {
+      await router.push("./");
+      await queryUtils.productManagement.get.invalidate(data.id);
+    },
+    onError(error) {
+      if (error.data?.code && error.data.code === "CONFLICT") {
+        toast({
+          title: "Product has been edited by someone else. Please refresh page",
+        });
+      } else {
+        toast({
+          title: "Something went wrong",
+        });
+      }
     },
   });
 

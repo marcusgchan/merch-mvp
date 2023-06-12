@@ -1,20 +1,15 @@
 import Link from "next/link";
 import DashboardHeader from "~/components/dashboard/DashboardHeader";
+import FetchResolver from "~/components/ui/FetchResolver";
 import Layout from "~/components/ui/Layout";
-import { api } from "~/utils/api";
+import { type RouterOutputs, api } from "~/utils/api";
+
+type Products = RouterOutputs["productManagement"]["getAll"];
 
 export { getServerSideProps } from "~/utils/serverSideAuth";
 
 export default function Orders() {
-  const { data: products, isLoading } = api.productManagement.getAll.useQuery();
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (!products) {
-    return <div>Something went wrong</div>;
-  }
+  const productsQuery = api.productManagement.getAll.useQuery();
 
   return (
     <Layout>
@@ -29,22 +24,26 @@ export default function Orders() {
           </div>
         </div>
         <section className="grid grid-cols-4 gap-3">
-          {products.map((product) => (
-            <Link
-              href={`./${product.id}`}
-              key={product.id}
-              className="grid h-80 w-full items-center justify-stretch gap-2 rounded border-2 border-accent p-4"
-            >
-              <img
-                className="h-full w-full object-cover"
-                src="https://picsum.photos/200"
-                alt="Product Image"
-              />
-              <h3>{product.name}</h3>
-              <span>$ {product.price}</span>
-              <span>{product.archived ? "Archived" : "Active"}</span>
-            </Link>
-          ))}
+          <FetchResolver<Products> {...productsQuery}>
+            {(products) => {
+              return products.map((product) => (
+                <Link
+                  href={`./${product.id}`}
+                  key={product.id}
+                  className="grid h-full w-full items-center justify-stretch gap-2 rounded border-2 border-accent p-4"
+                >
+                  <img
+                    className="h-full w-full object-cover"
+                    src="https://picsum.photos/200"
+                    alt="Product Image"
+                  />
+                  <h3>{product.name}</h3>
+                  <span>$ {product.price}</span>
+                  <span>{product.archived ? "Archived" : "Active"}</span>
+                </Link>
+              ));
+            }}
+          </FetchResolver>
         </section>
       </main>
     </Layout>

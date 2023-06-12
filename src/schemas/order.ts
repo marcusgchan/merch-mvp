@@ -19,3 +19,7 @@ export const addFormOrderSchema = addOrderSchema.pick({
 });
 
 export type AddFormOrder = z.infer<typeof addFormOrderSchema>;
+
+export const getAllOrdersSchema = z.object({
+  processingState: z.enum(["processing", "processed"]),
+});

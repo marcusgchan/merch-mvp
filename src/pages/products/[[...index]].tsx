@@ -1,20 +1,15 @@
 import Link from "next/link";
 import Header from "~/components/products/Header";
+import FetchResolver from "~/components/ui/FetchResolver";
 import Layout from "~/components/ui/Layout";
-import { RouterOutputs, api } from "~/utils/api";
+import { type RouterOutputs, api } from "~/utils/api";
+
+type Products = RouterOutputs["product"]["getAll"];
 
 export default function Products() {
-  const { data: products, isLoading } = api.product.getAll.useQuery(undefined, {
+  const productsQuery = api.product.getAll.useQuery(undefined, {
     refetchOnWindowFocus: false,
   });
-
-  if (isLoading) {
-    return <h1>Loading...</h1>;
-  }
-
-  if (!products) {
-    return <h1>Something went wrong</h1>;
-  }
 
   return (
     <Layout>
@@ -22,9 +17,13 @@ export default function Products() {
       <main>
         <h1>Products</h1>
         <section className="grid grid-cols-4 gap-3">
-          {products.map((product) => (
-            <Product key={product.id} {...product} />
-          ))}
+          <FetchResolver<Products> {...productsQuery}>
+            {(products) =>
+              products.map((product) => (
+                <Product key={product.id} {...product} />
+              ))
+            }
+          </FetchResolver>
         </section>
       </main>
     </Layout>
@@ -40,7 +39,7 @@ function Product({
     <Link
       href={`./${id}`}
       key={id}
-      className="grid h-80 w-full items-center justify-stretch gap-2 rounded border-2 border-accent p-4"
+      className="grid h-full w-full items-center justify-stretch gap-2 rounded border-2 border-accent p-4"
     >
       <img
         className="h-full w-full object-cover"

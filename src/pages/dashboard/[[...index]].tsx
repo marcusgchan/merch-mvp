@@ -1,7 +1,7 @@
-import { ColumnDef } from "@tanstack/react-table";
+import { createColumnHelper, type ColumnDef } from "@tanstack/react-table";
 import DashboardHeader from "~/components/dashboard/DashboardHeader";
 import Layout from "~/components/ui/Layout";
-import { RouterOutputs, api } from "~/utils/api";
+import { type RouterOutputs, api } from "~/utils/api";
 import {
   flexRender,
   getCoreRowModel,
@@ -16,30 +16,54 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/Table";
+import { useState } from "react";
+import { Button } from "~/components/ui/Button";
+import FetchResolver from "~/components/ui/FetchResolver";
 
 export { getServerSideProps } from "~/utils/serverSideAuth";
 
+type ProcessState = "processing" | "processed";
+type Orders = RouterOutputs["order"]["getAll"];
+
 export default function Orders() {
-  const { data: orders, isLoading } = api.order.getAll.useQuery(undefined, {
-    refetchOnWindowFocus: false,
-  });
+  const [processingState, setProcessState] =
+    useState<ProcessState>("processing");
+  const handleProcessState = () =>
+    setProcessState((prev) => {
+      if (prev === "processing") {
+        return "processed";
+      }
 
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (!orders) {
-    return <div>Something went wrong</div>;
-  }
+      return "processing";
+    });
+  const orderResponse = api.order.getAll.useQuery(
+    { processingState: processingState },
+    {
+      refetchOnWindowFocus: false,
+    }
+  );
 
   return (
     <Layout>
       <DashboardHeader />
       <main>
-        <h2>Orders</h2>
+        <div className="flex justify-between">
+          <h2>Orders</h2>
+          <Button
+            onClick={handleProcessState}
+            variant="outline"
+            className="capitalize"
+          >
+            {processingState.toLowerCase()}
+          </Button>
+        </div>
         <section>
-          <div className="container mx-auto py-10">
-            <DataTable columns={columns} data={orders} />
+          <div className="py-10">
+            <FetchResolver<Orders> {...orderResponse}>
+              {(data) => {
+                return <DataTable columns={columns} data={data} />;
+              }}
+            </FetchResolver>
           </div>
         </section>
       </main>
@@ -49,10 +73,12 @@ export default function Orders() {
 
 type Order = Pick<
   RouterOutputs["order"]["getAll"][number],
-  "id" | "name" | "email" | "count" | "createdAt"
+  "id" | "name" | "email" | "count" | "processingState" | "createdAt"
 >;
 
-const columns: ColumnDef<Order>[] = [
+const columnHelper = createColumnHelper<Order>();
+
+const columns = [
   {
     header: "Name",
     accessorKey: "name",
@@ -62,13 +88,18 @@ const columns: ColumnDef<Order>[] = [
     accessorKey: "email",
   },
   {
-    header: "Count",
+    header: "Number of Items",
     accessorKey: "count",
   },
   {
-    header: "Created At",
-    accessorKey: "createdAt",
+    header: "Processing State",
+    accessorKey: "processingState",
   },
+  columnHelper.accessor("createdAt", {
+    id: "createdAt",
+    cell: (row) => row.getValue().toLocaleDateString(),
+    header: "Created At",
+  }),
 ];
 
 interface DataTableProps<TData, TValue> {
