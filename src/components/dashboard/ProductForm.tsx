@@ -6,16 +6,16 @@ import { Textarea } from "../ui/TextArea";
 import { useRouter } from "next/router";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  AddProduct,
-  EditProduct,
-  addProductSchema,
-  editProductSchema,
+  type AddProduct,
+  type EditProduct,
+  type addProductSchema,
+  type editProductSchema,
 } from "~/schemas/productManagement";
 import { useFieldArray, useForm } from "react-hook-form";
-import { RouterInputs, RouterOutputs, api } from "~/utils/api";
+import { type RouterInputs, type RouterOutputs, api } from "~/utils/api";
 import { v4 as uuidv4 } from "uuid";
 import { Checkbox } from "../ui/Checkbox";
-import { CheckedState } from "@radix-ui/react-checkbox";
+import { type CheckedState } from "@radix-ui/react-checkbox";
 
 export type FormProps = {
   initialData: RouterOutputs["productManagement"]["get"];
@@ -54,8 +54,8 @@ export function Form({ initialData, schema, submitCallback }: FormProps) {
   };
 
   const archiveProduct = api.productManagement.archive.useMutation({
-    onSuccess() {
-      router.push("./");
+    async onSuccess() {
+      await router.push("./");
     },
   });
 
@@ -65,8 +65,8 @@ export function Form({ initialData, schema, submitCallback }: FormProps) {
   };
 
   const unarchiveProduct = api.productManagement.unarchive.useMutation({
-    onSuccess() {
-      router.push("./");
+    async onSuccess() {
+      await router.push("./");
     },
   });
 
@@ -118,9 +118,9 @@ export function Form({ initialData, schema, submitCallback }: FormProps) {
   return (
     <form
       className="flex w-full max-w-md flex-col gap-4"
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault();
-        handleSubmit((data) => submitCallback(data, sizes))();
+        await handleSubmit((data) => submitCallback(data, sizes))();
       }}
     >
       <div className="flex items-center justify-between">
