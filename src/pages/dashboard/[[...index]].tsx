@@ -19,6 +19,7 @@ import {
 import { useState } from "react";
 import { Button } from "~/components/ui/Button";
 import FetchResolver from "~/components/ui/FetchResolver";
+import { useRouter } from "next/router";
 
 export { getServerSideProps } from "~/utils/serverSideAuth";
 
@@ -36,12 +37,11 @@ export default function Orders() {
 
       return "processing";
     });
-  const orderResponse = api.order.getAll.useQuery(
-    { processingState: processingState },
-    {
-      refetchOnWindowFocus: false,
-    }
-  );
+  const orderResponse = api.order.getAll.useQuery({
+    processingState: processingState,
+  });
+
+  const router = useRouter();
 
   return (
     <Layout>
@@ -61,7 +61,16 @@ export default function Orders() {
           <div className="py-10">
             <FetchResolver<Orders> {...orderResponse}>
               {(data) => {
-                return <DataTable columns={columns} data={data} />;
+                return (
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  <DataTable<Order, any>
+                    columns={columns}
+                    data={data}
+                    onRowClicked={async (order) => {
+                      await router.push(`./orders/${order.id}`);
+                    }}
+                  />
+                );
               }}
             </FetchResolver>
           </div>
@@ -73,31 +82,34 @@ export default function Orders() {
 
 type Order = Pick<
   RouterOutputs["order"]["getAll"][number],
-  "id" | "name" | "email" | "count" | "processingState" | "createdAt"
+  "id" | "name" | "email" | "count"| "total" | "processingState" | "createdAt"
 >;
 
 const columnHelper = createColumnHelper<Order>();
 
 const columns = [
-  {
+  columnHelper.accessor("id", {
+    header: "Order ID",
+  }),
+  columnHelper.accessor("name", {
     header: "Name",
-    accessorKey: "name",
-  },
-  {
+  }),
+  columnHelper.accessor("email", {
     header: "Email",
-    accessorKey: "email",
-  },
-  {
+  }),
+  columnHelper.accessor("count", {
     header: "Number of Items",
-    accessorKey: "count",
-  },
-  {
+  }),
+  columnHelper.accessor("total", {
+    header: "Total",
+    cell: (cell) => `$${cell.getValue()}`,
+  }),
+  columnHelper.accessor("processingState", {
     header: "Processing State",
-    accessorKey: "processingState",
-  },
+  }),
   columnHelper.accessor("createdAt", {
     id: "createdAt",
-    cell: (row) => row.getValue().toLocaleDateString(),
+    cell: (cell) => cell.getValue().toLocaleDateString(),
     header: "Created At",
   }),
 ];
@@ -110,7 +122,8 @@ interface DataTableProps<TData, TValue> {
 export function DataTable<TData, TValue>({
   columns,
   data,
-}: DataTableProps<TData, TValue>) {
+  onRowClicked,
+}: DataTableProps<TData, TValue> & { onRowClicked: (TData: TData) => void }) {
   const table = useReactTable({
     data,
     columns,
@@ -144,9 +157,10 @@ export function DataTable<TData, TValue>({
               <TableRow
                 key={row.id}
                 data-state={row.getIsSelected() && "selected"}
+                onClick={() => onRowClicked(row.original)}
               >
                 {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
+                  <TableCell className="cursor-pointer" key={cell.id}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}

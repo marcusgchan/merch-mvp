@@ -25,7 +25,6 @@ export default function Product() {
     router.query.productId as string,
     {
       enabled: !!router.query.productId,
-      refetchOnWindowFocus: false,
     }
   );
 

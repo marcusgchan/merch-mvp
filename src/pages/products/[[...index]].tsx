@@ -7,9 +7,7 @@ import { type RouterOutputs, api } from "~/utils/api";
 type Products = RouterOutputs["product"]["getAll"];
 
 export default function Products() {
-  const productsQuery = api.product.getAll.useQuery(undefined, {
-    refetchOnWindowFocus: false,
-  });
+  const productsQuery = api.product.getAll.useQuery(undefined);
 
   return (
     <Layout>

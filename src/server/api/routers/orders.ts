@@ -3,6 +3,11 @@ import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { addOrderSchema, getAllOrdersSchema } from "~/schemas/order";
 import { TRPCError } from "@trpc/server";
 
+type ItemTotal = {
+  orderId: string;
+  total: number;
+};
+
 export const orderRouter = createTRPCRouter({
   getAll: protectedProcedure
     .input(getAllOrdersSchema)
@@ -24,10 +29,16 @@ export const orderRouter = createTRPCRouter({
         },
       });
 
+      const itemTotals = await ctx.prisma.$queryRaw<ItemTotal[]>`
+        SELECT orderId, SUM(price * quantity) as total
+        FROM order_items
+        GROUP BY orderId`;
+
       return orders.map((order) => ({
         ...order,
         count:
           orderCount.find((c) => c.orderId === order.id)?._sum?.quantity ?? 0,
+        total: itemTotals.find((t) => t.orderId === order.id)?.total ?? 0,
       }));
     }),
   get: protectedProcedure.input(z.string()).query(async ({ ctx, input }) => {
