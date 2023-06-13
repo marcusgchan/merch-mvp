@@ -2,44 +2,40 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { addOrderSchema, getAllOrdersSchema } from "~/schemas/order";
 import { TRPCError } from "@trpc/server";
+import { type ProcessingState } from "@prisma/client";
 
-type ItemTotal = {
-  orderId: string;
+type Order = {
+  id: string;
+  name: string;
+  email: string;
+  count: bigint;
   total: number;
+  processingState: ProcessingState;
+  createdAt: Date;
 };
 
 export const orderRouter = createTRPCRouter({
   getAll: protectedProcedure
     .input(getAllOrdersSchema)
     .query(async ({ ctx, input }) => {
-      const orders = await ctx.prisma.order.findMany({
-        include: { _count: { select: { orderedItems: true } } },
-        orderBy: {
-          createdAt: "desc",
-        },
-        where: {
-          processingState: input.processingState,
-        },
-      });
+      const orders = await ctx.prisma.$queryRaw<Order[]>`
+        SELECT id, name, email, totals.total, counts.count, processingState, createdAt
+        FROM orders, (
+          SELECT orderId, SUM(price * quantity) as total
+          FROM order_items
+          GROUP BY orderId
+        ) as totals, (
+          SELECT orderId, SUM(quantity) as count
+          FROM order_items
+          GROUP BY orderId
+        ) as counts
+        WHERE orders.id = totals.orderId
+        AND orders.id = counts.orderId
+        AND processingState = ${input.processingState}
+        ORDER BY createdAt DESC
+      `;
 
-      const orderCount = await ctx.prisma.orderItem.groupBy({
-        by: ["orderId"],
-        _sum: {
-          quantity: true,
-        },
-      });
-
-      const itemTotals = await ctx.prisma.$queryRaw<ItemTotal[]>`
-        SELECT orderId, SUM(price * quantity) as total
-        FROM order_items
-        GROUP BY orderId`;
-
-      return orders.map((order) => ({
-        ...order,
-        count:
-          orderCount.find((c) => c.orderId === order.id)?._sum?.quantity ?? 0,
-        total: itemTotals.find((t) => t.orderId === order.id)?.total ?? 0,
-      }));
+      return orders;
     }),
   get: protectedProcedure.input(z.string()).query(async ({ ctx, input }) => {
     const order = await ctx.prisma.order.findUnique({
@@ -55,7 +51,21 @@ export const orderRouter = createTRPCRouter({
       },
     });
 
-    return order;
+    const _total = await ctx.prisma.$queryRaw<{ total: number }[]>`
+      SELECT SUM(price * quantity) as total
+      FROM order_items
+      WHERE orderId = ${input}
+      GROUP BY orderId
+    `;
+
+    const total = _total?.[0]?.total;
+
+    if (!total || !order) {
+      return null;
+    }
+    console.log(order);
+
+    return { ...order, total };
   }),
   add: publicProcedure
     .input(addOrderSchema)

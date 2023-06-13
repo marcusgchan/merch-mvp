@@ -13,11 +13,13 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
 } from "~/components/ui/Table";
 import DashboardHeader from "~/components/dashboard/DashboardHeader";
+import { useMemo } from "react";
 
 type Order = RouterOutputs["order"]["get"];
 
@@ -27,8 +29,28 @@ export default function OrderId() {
   const router = useRouter();
   const orderQuery = api.order.get.useQuery(router.query.orderId as string, {
     enabled: !!router.query.orderId,
-    refetchOnWindowFocus: false,
   });
+
+  const columns = useMemo(() => {
+    const columns = [
+      columnHelper.accessor("product.name", {
+        header: "Product Name",
+        footer: () => "Total",
+      }),
+      columnHelper.accessor("size", {
+        header: "Size",
+      }),
+      columnHelper.accessor("quantity", {
+        header: "Quantity",
+      }),
+      columnHelper.accessor("price", {
+        header: "Price",
+        cell: (cell) => `$${cell.getValue() * cell.row.original.quantity}`,
+        footer: () => `$${orderQuery.data?.total ?? 0}`,
+      }),
+    ];
+    return columns;
+  }, [orderQuery]);
 
   return (
     <Layout>
@@ -48,7 +70,7 @@ export default function OrderId() {
                     <p>Ordered At: {order.createdAt.toLocaleDateString()}</p>
                   </div>
                   <div>
-                   {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                     <DataTable<OrderedItem, any>
                       columns={columns}
                       data={order.orderedItems}
@@ -71,22 +93,6 @@ type OrderedItem = NonNullable<
 >["orderedItems"][number];
 
 const columnHelper = createColumnHelper<OrderedItem>();
-
-const columns = [
-  columnHelper.accessor("product.name", {
-    header: "Product Name",
-  }),
-  columnHelper.accessor("size", {
-    header: "Size",
-  }),
-  columnHelper.accessor("quantity", {
-    header: "Quantity",
-  }),
-  columnHelper.accessor("price", {
-    header: "Price",
-    cell: (cell) => `$${cell.getValue() * cell.row.original.quantity}`,
-  }),
-];
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -146,6 +152,22 @@ function DataTable<TData, TValue>({
             </TableRow>
           )}
         </TableBody>
+        <TableFooter>
+          {table.getFooterGroups().map((getFooterGroups) => (
+            <TableRow key={getFooterGroups.id}>
+              {getFooterGroups.headers.map((header) => (
+                <TableHead key={header.id}>
+                  {header.isPlaceholder
+                    ? null
+                    : flexRender(
+                        header.column.columnDef.footer,
+                        header.getContext()
+                      )}
+                </TableHead>
+              ))}
+            </TableRow>
+          ))}
+        </TableFooter>
       </Table>
     </div>
   );

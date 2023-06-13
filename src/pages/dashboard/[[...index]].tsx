@@ -7,7 +7,6 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-
 import {
   Table,
   TableBody,
@@ -80,10 +79,7 @@ export default function Orders() {
   );
 }
 
-type Order = Pick<
-  RouterOutputs["order"]["getAll"][number],
-  "id" | "name" | "email" | "count"| "total" | "processingState" | "createdAt"
->;
+type Order = RouterOutputs["order"]["getAll"][number];
 
 const columnHelper = createColumnHelper<Order>();
 
