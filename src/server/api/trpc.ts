@@ -7,7 +7,7 @@
  * need to use are documented accordingly near the end.
  */
 
-import { initTRPC, TRPCError } from "@trpc/server";
+import { initTRPC, TRPCError, type inferAsyncReturnType } from "@trpc/server";
 import { type CreateNextContextOptions } from "@trpc/server/adapters/next";
 import { type Session } from "next-auth";
 import superjson from "superjson";
@@ -61,6 +61,8 @@ export const createTRPCContext = async (opts: CreateNextContextOptions) => {
   });
 };
 
+export type Context = inferAsyncReturnType<typeof createTRPCContext>;
+
 /**
  * 2. INITIALIZATION
  *
@@ -82,6 +84,7 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
     };
   },
 });
+
 
 /**
  * 3. ROUTER & PROCEDURE (THE IMPORTANT BIT)

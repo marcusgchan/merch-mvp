@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
+import {
+  Context,
+  createTRPCRouter,
+  protectedProcedure,
+  publicProcedure,
+} from "../trpc";
 import { addOrderSchema, getAllOrdersSchema } from "~/schemas/order";
 import { TRPCError } from "@trpc/server";
 import { type ProcessingState } from "@prisma/client";
@@ -51,19 +56,12 @@ export const orderRouter = createTRPCRouter({
       },
     });
 
-    const _total = await ctx.prisma.$queryRaw<{ total: number }[]>`
-      SELECT SUM(price * quantity) as total
-      FROM order_items
-      WHERE orderId = ${input}
-      GROUP BY orderId
-    `;
-
+    const _total = await getOrderTotal(input, ctx);
     const total = _total?.[0]?.total;
 
     if (!total || !order) {
       return null;
     }
-    console.log(order);
 
     return { ...order, total };
   }),
@@ -116,4 +114,51 @@ export const orderRouter = createTRPCRouter({
         });
       });
     }),
+  updateProcessingState: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        processingState: z.enum(["processing", "processed"]),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const order = await ctx.prisma.order.update({
+        where: {
+          id: input.id,
+        },
+        data: {
+          processingState: input.processingState,
+        },
+        include: {
+          orderedItems: {
+            include: {
+              product: true,
+            },
+          },
+        },
+      });
+
+      const _total = await getOrderTotal(input.id, ctx);
+      const total = _total?.[0]?.total;
+      
+      if (!total || !order) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Could not update processing state",
+        });
+      }
+
+      return { ...order, total };
+    }),
 });
+
+async function getOrderTotal(orderId: string, ctx: Context) {
+  const total = await ctx.prisma.$queryRaw<{ total: number }[]>`
+    SELECT SUM(price * quantity) as total
+    FROM order_items
+    WHERE orderId = ${orderId}
+    GROUP BY orderId
+  `;
+
+  return total;
+}

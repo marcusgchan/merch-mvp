@@ -20,6 +20,14 @@ import {
 } from "~/components/ui/Table";
 import DashboardHeader from "~/components/dashboard/DashboardHeader";
 import { useMemo } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/Select";
+import { type ProcessingState } from "@prisma/client";
 
 type Order = RouterOutputs["order"]["get"];
 
@@ -52,6 +60,14 @@ export default function OrderId() {
     return columns;
   }, [orderQuery]);
 
+  const queryUtils = api.useContext();
+
+  const updateProcessingState = api.order.updateProcessingState.useMutation({
+    onSuccess(data) {
+      queryUtils.order.get.setData(data.id, data);
+    }
+  });
+
   return (
     <Layout>
       <DashboardHeader />
@@ -62,13 +78,35 @@ export default function OrderId() {
             {(order) => {
               return order ? (
                 <div>
-                  <div>
-                    <p>Order ID: {order.id}</p>
-                    <p>Status: {order.processingState}</p>
-                    <p>Name: {order.name}</p>
-                    <p>Email: {order.email}</p>
-                    <p>Ordered At: {order.createdAt.toLocaleDateString()}</p>
-                  </div>
+                  <ul>
+                    <li>Order ID: {order.id}</li>
+                    <li className="flex items-center gap-2">
+                      Status
+                      <Select
+                        value={orderQuery.data?.processingState}
+                        onValueChange={(state: ProcessingState) => {
+                          updateProcessingState.mutate({
+                            id: order.id,
+                            processingState: state,
+                          });
+                        }}
+                      >
+                        <SelectTrigger
+                          className="w-32"
+                          disabled={updateProcessingState.isLoading}
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="processing">Processing</SelectItem>
+                          <SelectItem value="processed">Processed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </li>
+                    <li>Name: {order.name}</li>
+                    <li>Email: {order.email}</li>
+                    <li>Ordered At: {order.createdAt.toLocaleDateString()}</li>
+                  </ul>
                   <div>
                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                     <DataTable<OrderedItem, any>
