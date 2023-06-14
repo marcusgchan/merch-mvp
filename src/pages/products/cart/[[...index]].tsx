@@ -2,6 +2,7 @@ import { useAtomValue, useSetAtom } from "jotai";
 import {
   CartItem,
   cartAtom,
+  clearCartAtom,
   removeFromCartAtom,
   updateCartItemQuantityAtom,
 } from "~/components/cartStore";
@@ -22,6 +23,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { type AddFormOrder, addFormOrderSchema } from "~/schemas/order";
 import { FieldValidation } from "~/components/ui/FieldValidation";
 import { useToast } from "~/components/ui/useToast";
+import { useState } from "react";
 
 // Prevent Nextjs hydration warning
 const ClientSideDialog = dynamic(
@@ -33,6 +35,7 @@ const ClientSideDialog = dynamic(
 
 export default function Index() {
   const cart = useAtomValue(cartAtom);
+  const clearCart = useSetAtom(clearCartAtom);
 
   const setQuantity = useSetAtom(updateCartItemQuantityAtom);
   const handleQuantityChange = (id: string, quantity: number) =>
@@ -41,13 +44,14 @@ export default function Index() {
   const removeFromCart = useSetAtom(removeFromCartAtom);
   const handleRemove = (id: string) => removeFromCart({ id });
 
-  const { data: products, isLoading } = api.product.getAll.useQuery(undefined, {
-    refetchOnWindowFocus: false,
-  });
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const { data: products, isLoading } = api.product.getAll.useQuery(undefined);
 
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<AddFormOrder>({
     resolver: zodResolver(addFormOrderSchema),
@@ -58,6 +62,9 @@ export default function Index() {
   const placeOrderMutation = api.order.add.useMutation({
     onSuccess() {
       toast({ title: "Order placed" });
+      clearCart();
+      reset();
+      setIsModalOpen(false);
     },
     onError(error) {
       if (error.data?.code && error.data.code === "CONFLICT") {
@@ -110,7 +117,10 @@ export default function Index() {
           )}
           <div>
             <h2>Checkout</h2>
-            <ClientSideDialog>
+            <ClientSideDialog
+              open={isModalOpen}
+              onOpenChange={(e) => setIsModalOpen(e)}
+            >
               <DialogTrigger asChild>
                 <Button variant="outline" disabled={cart.length === 0}>
                   Place Order
@@ -131,7 +141,9 @@ export default function Index() {
                       <Input id="email" {...register("email")} />
                     </FieldValidation>
                   </div>
-                  <Button type="submit">Place Order</Button>
+                  <Button type="submit" disabled={placeOrderMutation.isLoading}>
+                    Place Order
+                  </Button>
                 </form>
               </DialogContent>
             </ClientSideDialog>

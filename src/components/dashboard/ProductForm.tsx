@@ -11,11 +11,18 @@ import {
   type addProductSchema,
   type editProductSchema,
 } from "~/schemas/productManagement";
-import { useFieldArray, useForm } from "react-hook-form";
+import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { type RouterInputs, type RouterOutputs, api } from "~/utils/api";
 import { v4 as uuidv4 } from "uuid";
 import { Checkbox } from "../ui/Checkbox";
 import { type CheckedState } from "@radix-ui/react-checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/Select";
 
 export type FormProps = {
   initialData: RouterOutputs["productManagement"]["get"];
@@ -24,24 +31,51 @@ export type FormProps = {
     data: AddProduct | EditProduct,
     sizes: RouterInputs["productManagement"]["add"]["sizes"]
   ) => void;
+  isSubmitting: boolean;
 };
 
-export function Form({ initialData, schema, submitCallback }: FormProps) {
+export function Form({
+  initialData,
+  schema,
+  submitCallback,
+  isSubmitting,
+}: FormProps) {
   const {
     register,
     handleSubmit,
     control,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<AddProduct | EditProduct>({
-    defaultValues: initialData
+    values: initialData
       ? {
           ...initialData,
           about: initialData.aboutProducts,
           sizes: initialData.availableSizes,
+          archived: initialData.archived,
         }
       : undefined,
     resolver: zodResolver(schema),
   });
+
+  const archived = watch("archived");
+
+  const handleArchiveSelect = (value: string) => {
+    if (value === "archive") {
+      setValue("archived", true, {
+        shouldTouch: true,
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    } else if (value === "unarchive") {
+      setValue("archived", false, {
+        shouldTouch: true,
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
+  };
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -51,28 +85,6 @@ export function Form({ initialData, schema, submitCallback }: FormProps) {
 
   const addField = () => {
     append({ id: uuidv4(), description: "" });
-  };
-
-  const archiveProduct = api.productManagement.archive.useMutation({
-    async onSuccess() {
-      await router.push("./");
-    },
-  });
-
-  const handleArchiveProduct = () => {
-    if (!initialData) return;
-    archiveProduct.mutate(initialData.id);
-  };
-
-  const unarchiveProduct = api.productManagement.unarchive.useMutation({
-    async onSuccess() {
-      await router.push("./");
-    },
-  });
-
-  const handleUnarchiveProduct = () => {
-    if (!initialData) return;
-    unarchiveProduct.mutate(initialData.id);
   };
 
   const router = useRouter();
@@ -127,23 +139,34 @@ export function Form({ initialData, schema, submitCallback }: FormProps) {
         <h2 className="self-start">
           {initialData ? "Edit Product" : "Add Product"}
         </h2>
-        {initialData && !initialData.archived && (
-          <Button
-            onClick={handleArchiveProduct}
-            type="button"
-            variant="destructive"
-          >
-            Archive
-          </Button>
-        )}
-        {initialData && initialData.archived && (
-          <Button
-            onClick={handleUnarchiveProduct}
-            type="button"
-            variant="destructive"
-          >
-            Unarchive
-          </Button>
+        {initialData && (
+          <Controller
+            control={control}
+            name="archived"
+            render={({
+              field: { onChange, onBlur, value, name, ref },
+              fieldState: { invalid, isTouched, isDirty, error },
+              formState,
+            }) => {
+              return (
+                <Select
+                  onValueChange={(e) => {
+                    handleArchiveSelect(e);
+                    onChange(e === "archived" ? true : false);
+                  }}
+                  value={archived ? "archived" : "active"}
+                >
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="archived">Archived</SelectItem>
+                  </SelectContent>
+                </Select>
+              );
+            }}
+          />
         )}
       </div>
       <div className="grid gap-2">
@@ -216,7 +239,7 @@ export function Form({ initialData, schema, submitCallback }: FormProps) {
         >
           Back
         </Button>
-        <Button type="submit">
+        <Button type="submit" disabled={isSubmitting}>
           {initialData ? "Edit Product" : "Add Product"}
         </Button>
       </div>

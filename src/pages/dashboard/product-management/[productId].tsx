@@ -18,13 +18,10 @@ export default function Product() {
     { enabled: !!productId, refetchOnWindowFocus: false }
   );
 
-  const queryUtils = api.useContext();
-
   const { toast } = useToast();
   const editProduct = api.productManagement.edit.useMutation({
-    async onSuccess(data) {
+    async onSuccess() {
       await router.push("./");
-      await queryUtils.productManagement.get.invalidate(data.id);
     },
     onError(error) {
       if (error.data?.code && error.data.code === "CONFLICT") {
@@ -52,11 +49,7 @@ export default function Product() {
       | RouterInputs["productManagement"]["add"]
       | RouterInputs["productManagement"]["edit"]
   ) => {
-    editProduct.mutate({
-      ...data,
-      id: product.id,
-      updatedAt: product.updatedAt,
-    });
+    editProduct.mutate(data as RouterInputs["productManagement"]["edit"]);
   };
 
   return (
@@ -67,6 +60,7 @@ export default function Product() {
           initialData={product}
           schema={editProductSchema}
           submitCallback={submitCallback}
+          isSubmitting={editProduct.isLoading}
         />
       </main>
     </Layout>

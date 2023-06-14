@@ -1,7 +1,9 @@
 import { atom } from "jotai";
-import { RouterInputs } from "~/utils/api";
+import { type RouterInputs } from "~/utils/api";
 
-export type CartItem = RouterInputs["order"]["add"]["products"][number] & { name: string }
+export type CartItem = RouterInputs["order"]["add"]["products"][number] & {
+  name: string;
+};
 
 export const cartAtom = atom<CartItem[]>([]);
 
@@ -56,3 +58,7 @@ export const removeFromCartAtom = atom(
     );
   }
 );
+
+export const clearCartAtom = atom(null, (_, set) => {
+  set(cartAtom, []);
+});

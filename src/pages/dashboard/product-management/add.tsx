@@ -1,7 +1,7 @@
-import { RouterInputs, api } from "~/utils/api";
+import { type RouterInputs, api } from "~/utils/api";
 import {
-  AddProduct,
-  EditProduct,
+  type AddProduct,
+  type EditProduct,
   addProductSchema,
 } from "~/schemas/productManagement";
 import { useRouter } from "next/router";
@@ -11,8 +11,8 @@ export { getServerSideProps } from "~/utils/serverSideAuth";
 
 export default function Add() {
   const addProduct = api.productManagement.add.useMutation({
-    onSuccess() {
-      router.push("./");
+    async onSuccess() {
+      await router.push("./");
     },
   });
 
@@ -31,6 +31,7 @@ export default function Add() {
         initialData={null}
         submitCallback={submitCallback}
         schema={addProductSchema}
+        isSubmitting={addProduct.isLoading}
       />
     </main>
   );

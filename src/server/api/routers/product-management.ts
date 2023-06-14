@@ -60,6 +60,7 @@ export const productManagementRouter = createTRPCRouter({
             data: {
               name: input.name,
               price: input.price,
+              archived: input.archived,
             },
           });
 

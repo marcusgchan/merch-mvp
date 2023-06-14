@@ -32,6 +32,7 @@ export type AddProduct = z.infer<typeof addProductSchema>;
 export const editProductSchema = addProductSchema.extend({
   id: z.string(),
   updatedAt: z.date(),
+  archived: z.boolean(),
 });
 
-export type EditProduct = z.infer<typeof addProductSchema>;
+export type EditProduct = z.infer<typeof editProductSchema>;
