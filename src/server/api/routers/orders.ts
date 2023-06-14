@@ -1,6 +1,6 @@
 import { z } from "zod";
 import {
-  Context,
+  type Context,
   createTRPCRouter,
   protectedProcedure,
   publicProcedure,

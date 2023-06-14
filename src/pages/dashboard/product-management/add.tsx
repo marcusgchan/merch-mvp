@@ -10,7 +10,7 @@ import { Form } from "~/components/dashboard/ProductForm";
 export { getServerSideProps } from "~/utils/serverSideAuth";
 
 export default function Add() {
-  const addProduct = api.productManagement.add.useMutation({
+const addProduct = api.productManagement.add.useMutation({
     async onSuccess() {
       await router.push("./");
     },

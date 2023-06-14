@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "../ui/Select";
 
+
 export type FormProps = {
   initialData: RouterOutputs["productManagement"]["get"];
   schema: typeof addProductSchema | typeof editProductSchema;
@@ -45,7 +46,6 @@ export function Form({
     handleSubmit,
     control,
     watch,
-    setValue,
     formState: { errors },
   } = useForm<AddProduct | EditProduct>({
     values: initialData
@@ -60,22 +60,6 @@ export function Form({
   });
 
   const archived = watch("archived");
-
-  const handleArchiveSelect = (value: string) => {
-    if (value === "archive") {
-      setValue("archived", true, {
-        shouldTouch: true,
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-    } else if (value === "unarchive") {
-      setValue("archived", false, {
-        shouldTouch: true,
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-    }
-  };
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -118,7 +102,6 @@ export function Form({
       removeSizes(index);
     }
   };
-
   if (allSizesIsLoading) {
     return <div>Loading...</div>;
   }
@@ -132,7 +115,9 @@ export function Form({
       className="flex w-full max-w-md flex-col gap-4"
       onSubmit={async (e) => {
         e.preventDefault();
-        await handleSubmit((data) => submitCallback(data, sizes))();
+        await handleSubmit((data) =>
+          submitCallback(data, sizes)
+        )();
       }}
     >
       <div className="flex items-center justify-between">
@@ -143,15 +128,10 @@ export function Form({
           <Controller
             control={control}
             name="archived"
-            render={({
-              field: { onChange, onBlur, value, name, ref },
-              fieldState: { invalid, isTouched, isDirty, error },
-              formState,
-            }) => {
+            render={({ field: { onChange } }) => {
               return (
                 <Select
                   onValueChange={(e) => {
-                    handleArchiveSelect(e);
                     onChange(e === "archived" ? true : false);
                   }}
                   value={archived ? "archived" : "active"}

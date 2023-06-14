@@ -6,7 +6,6 @@ import {
   type DefaultSession,
 } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { env } from "~/env.mjs";
 import { prisma } from "~/server/db";
 import bycrpt from "bcrypt";
 

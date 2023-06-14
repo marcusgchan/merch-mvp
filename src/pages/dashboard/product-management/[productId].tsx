@@ -49,7 +49,9 @@ export default function Product() {
       | RouterInputs["productManagement"]["add"]
       | RouterInputs["productManagement"]["edit"]
   ) => {
-    editProduct.mutate(data as RouterInputs["productManagement"]["edit"]);
+    if ("id" in data) {
+      editProduct.mutate(data);
+    }
   };
 
   return (
