@@ -103,7 +103,7 @@ model AvailableSize {
 
 model Product {
   id        String   @id @default(cuid())
-  imageKey  String?
+  imageLink String   @db.VarChar(2048)
   name      String
   price     Float
   createdAt DateTime @default(now())

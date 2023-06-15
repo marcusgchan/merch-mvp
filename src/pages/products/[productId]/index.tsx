@@ -15,6 +15,7 @@ import {
 } from "~/components/ui/Select";
 import { useToast } from "~/components/ui/useToast";
 import { type RouterInputs, api } from "~/utils/api";
+import Image from "next/image";
 
 type Size = RouterInputs["order"]["add"]["products"][number]["size"];
 
@@ -51,9 +52,20 @@ export default function Product() {
 
     if (size) {
       const id = `${product.id}-${size}`;
-      addToCart({ id, name: product.name, size, quantity });
+      addToCart({
+        id,
+        name: product.name,
+        size,
+        quantity,
+        imageLink: product.imageLink,
+      });
     } else {
-      addToCart({ id: product.id, name: product.name, quantity });
+      addToCart({
+        id: product.id,
+        name: product.name,
+        quantity,
+        imageLink: product.imageLink,
+      });
     }
 
     toast({
@@ -67,10 +79,13 @@ export default function Product() {
       <Header />
       <main className="flex justify-center gap-4">
         <div className="w-full">
-          <img
+          <Image
+            priority={true}
+            width={500}
+            height={500}
             className="h-full w-full object-cover"
-            src="https://picsum.photos/200"
-            alt="Product Image"
+            src={product.imageLink}
+            alt={product.name}
           />
         </div>
         <form className="flex w-full flex-col gap-4" onSubmit={handleAddToCart}>

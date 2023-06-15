@@ -3,6 +3,7 @@ import { type RouterInputs } from "~/utils/api";
 
 export type CartItem = RouterInputs["order"]["add"]["products"][number] & {
   name: string;
+  imageLink: string;
 };
 
 export const cartAtom = atom<CartItem[]>([]);

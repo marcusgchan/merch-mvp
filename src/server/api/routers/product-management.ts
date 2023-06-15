@@ -16,6 +16,7 @@ export const productManagementRouter = createTRPCRouter({
           data: {
             name: input.name,
             price: input.price,
+            imageLink: input.imageLink,
             aboutProducts: {
               createMany: {
                 data: input.about,
@@ -60,6 +61,7 @@ export const productManagementRouter = createTRPCRouter({
             data: {
               name: input.name,
               price: input.price,
+              imageLink: input.imageLink,
               archived: input.archived,
             },
           });

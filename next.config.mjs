@@ -18,8 +18,9 @@ const config = {
     locales: ["en"],
     defaultLocale: "en",
   },
-  experimental: {
-    esmExternals: false,
+  images: {
+    domains: ["drive.google.com"],
   },
 };
+
 export default config;

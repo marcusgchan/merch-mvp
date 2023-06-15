@@ -2,6 +2,7 @@ import Link from "next/link";
 import Header from "~/components/products/Header";
 import FetchResolver from "~/components/ui/FetchResolver";
 import Layout from "~/components/ui/Layout";
+import Image from "next/image";
 import { type RouterOutputs, api } from "~/utils/api";
 
 type Products = RouterOutputs["product"]["getAll"];
@@ -28,21 +29,20 @@ export default function Products() {
   );
 }
 
-function Product({
-  id,
-  name,
-  price,
-}: RouterOutputs["product"]["getAll"][number]) {
+function Product({ id, name, price, imageLink }: Products[number]) {
   return (
     <Link
       href={`./${id}`}
       key={id}
       className="grid h-full w-full items-center justify-stretch gap-2 rounded border-2 border-accent p-4"
     >
-      <img
+      <Image
+        priority={true}
+        width={500}
+        height={500}
         className="h-full w-full object-cover"
-        src="https://picsum.photos/200"
-        alt="Product Image"
+        src={imageLink}
+        alt={name}
       />
       <h3>{name}</h3>
       <span>$ {price}</span>

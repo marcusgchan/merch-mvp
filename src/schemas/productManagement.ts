@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const addProductSchema = z.object({
   name: z.string().min(1),
+  imageLink: z.string().url(),
   price: z
     .string()
     .min(1)

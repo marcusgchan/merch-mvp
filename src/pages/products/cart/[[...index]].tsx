@@ -24,6 +24,7 @@ import { type AddFormOrder, addFormOrderSchema } from "~/schemas/order";
 import { FieldValidation } from "~/components/ui/FieldValidation";
 import { useToast } from "~/components/ui/useToast";
 import { useState } from "react";
+import Image from "next/image";
 
 // Prevent Nextjs hydration warning
 const ClientSideDialog = dynamic(
@@ -166,12 +167,22 @@ function CartItem({
   size,
   price,
   quantity,
+  imageLink,
   handleQuantityChange,
   handleRemove,
 }: CartItemProps) {
   return (
     <li className="flex items-center gap-4">
-      <div className="h-20 w-20 bg-gray-200"></div>
+      <div className="h-20 w-20 bg-gray-200">
+        <Image
+          priority={true}
+          width={500}
+          height={500}
+          className="h-full w-full object-cover"
+          src={imageLink}
+          alt={name}
+        />
+      </div>
       <ul>
         <li>Name: {name}</li>
         {!!size && <li>Size: {size}</li>}

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import DashboardHeader from "~/components/dashboard/DashboardHeader";
 import FetchResolver from "~/components/ui/FetchResolver";
@@ -32,10 +33,13 @@ export default function Orders() {
                   key={product.id}
                   className="grid h-full w-full items-center justify-stretch gap-2 rounded border-2 border-accent p-4"
                 >
-                  <img
+                  <Image
+                    priority={true}
+                    width={500}
+                    height={500}
                     className="h-full w-full object-cover"
-                    src="https://picsum.photos/200"
-                    alt="Product Image"
+                    src={product.imageLink}
+                    alt={product.name}
                   />
                   <h3>{product.name}</h3>
                   <span>$ {product.price}</span>

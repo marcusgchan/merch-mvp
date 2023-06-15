@@ -161,6 +161,12 @@ export function Form({
           <Input id="price" type="text" {...register("price")} />
         </FieldValidation>
       </div>
+      <div className="grid gap-2">
+        <label htmlFor="link">Image Link</label>
+        <FieldValidation error={errors.imageLink}>
+          <Input {...register("imageLink")} id="link" />
+        </FieldValidation>
+      </div>
       <h3>Sizes</h3>
       <div className="grid grid-cols-3 gap-2">
         {allSizes.map(({ id, size }) => {
