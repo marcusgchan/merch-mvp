@@ -19,7 +19,9 @@ export default function DashboardHeader() {
             </li>
           </ul>
         </nav>
-        {session && <button onClick={() => signOut()}>Logout</button>}
+        {session && (
+          <button onClick={() => signOut({ callbackUrl: "/" })}>Logout</button>
+        )}
       </div>
     </header>
   );
