@@ -37,6 +37,9 @@ declare module "next-auth" {
  */
 export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
+  pages: {
+    signIn: "/auth/signin",
+  },
   callbacks: {
     session: ({ session, user, token }) => {
       if (user) {
@@ -59,6 +62,7 @@ export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
+      id: "credentials",
       name: "Credentials",
       credentials: {
         username: {

@@ -6,7 +6,7 @@ export const getServerSideProps: GetServerSideProps<object> = async (ctx) => {
   if (!session) {
     return {
       redirect: {
-        destination: `/api/auth/signin/?callback=${
+        destination: `/api/auth/signin/?callbackUrl=${
           ctx.req.url ?? "/dashboard"
         }`,
         permanent: false,
