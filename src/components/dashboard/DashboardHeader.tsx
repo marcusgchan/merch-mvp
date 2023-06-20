@@ -10,7 +10,7 @@ export default function DashboardHeader() {
         <nav>
           <ul className="flex gap-2">
             <li>
-              <Link href="/dashboard">Orders</Link>
+              <Link href="/dashboard/orders">Orders</Link>
             </li>
             <li>
               <Link href="/dashboard/product-management">

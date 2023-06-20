@@ -66,7 +66,7 @@ export default function Orders() {
                     columns={columns}
                     data={data}
                     onRowClicked={async (order) => {
-                      await router.push(`./orders/${order.id}`);
+                      await router.push(`./${order.id}`);
                     }}
                   />
                 );
